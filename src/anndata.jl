@@ -346,3 +346,54 @@ Base.parent(ad::AnnDataView) = ad.parent
 Base.parentindices(ad::AnnData) = axes(ad)
 Base.parentindices(ad::AnnDataView) = (ad.I, ad.J)
 file(ad::AnnDataView) = file(parent(ad))
+
+mergestrategy(merge::Function) = merge
+function mergestrategy(merge::Symbol)
+
+end
+
+
+function concat(adatadict::AbstractDict{<: AbstractString, <: AbstractAnnData}; kwargs...)
+    if :keys in keys(kwargs)
+        throw(ArgumentError("Cannot specify categories in AbstractDict keys as well as in `keys`"))
+    end
+    adkeys = collect(keys(adatadict))
+    ads = collect(values(adatadict))
+    concat(ads; keys=adkeys, kwargs...)
+end
+
+function concat(adatas::AbstractVector{<: AbstractAnnData};
+                axis=:obs,
+                join=:inner,
+                merge::Union{Symbol, Function, Nothing}=nothing,
+                uns_merge::Union{Symbol, Function, Nothing}=nothing,
+                label::Union{AbstractString, Nothing}=nothing,
+                keys::Union{AbstractVector, Nothing}=nothing,
+                index_unique::Union{AbstractString, Nothing}=nothing,
+                fill_value::Union{Any, Nothing}=nothing,
+                pairwise::Bool=false)
+    # merge strategies
+
+    # check keys
+    keys = if isnothing(keys)
+        string.(collect(eachindex(adatas)))
+    elseif length(keys) == length(adatas)
+        keys
+    else
+        throw(ArgumentError("Categories specified in `keys` must be the same length as `adatas`"))
+    end
+
+    # merge uns
+
+    # merge raw
+    raw = nothing
+    hasraw = [!isnothing(ad.raw) for ad in adatas]
+    if all(hasraw)
+        # recursive call
+    elseif any(hasraw)
+        @warn "Some but not all `adatas` have a `raw` attribute, not merging"
+    end
+    # AnnData(;raw)
+end
+
+export concat
